@@ -11,7 +11,15 @@ using Elsa.Services.Models;
 
 namespace Elsa.Activities.ControlFlow.Activities
 {
-    [ActivityDefinition(Category = "Control Flow", Description = "Iterate over a collection.", Icon = "far fa-circle")]
+    [ActivityDefinition(
+        Category = "Control Flow",
+        Description = "Iterate over a collection.",
+        Icon = "far fa-circle",
+        Outcomes = new [] {
+            OutcomeNames.Done,
+            OutcomeNames.Iterate,
+        }
+    )]
     public class ForEach : Activity
     {
         private readonly IWorkflowExpressionEvaluator expressionEvaluator;
