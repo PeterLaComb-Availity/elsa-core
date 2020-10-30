@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Elsa.Models;
 using Elsa.Persistence.EntityFrameworkCore.CustomSchema;
 using Elsa.Persistence.EntityFrameworkCore.Entities;
-using Elsa.Persistence.EntityFrameworkCore.Extensions;
+using Elsa.Serialization.Converters;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -30,6 +30,8 @@ namespace Elsa.Persistence.EntityFrameworkCore.DbContexts
         protected ElsaContext(DbContextOptions options) : base(options)
         {
             serializerSettings = new JsonSerializerSettings().ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+            serializerSettings.Converters.Add(new ExceptionConverter());
+
             DbContextCustomSchema = options.GetDbContextCustomSchema();
         }
 
@@ -92,10 +94,10 @@ namespace Elsa.Persistence.EntityFrameworkCore.DbContexts
             entity.Property(x => x.Status).HasConversion<string>();
             
             entity
-                .Property(x => x.Scopes)
+                .Property(x => x.Scope)
                 .HasConversion(
                     x => Serialize(x),
-                    x => Deserialize<Stack<WorkflowExecutionScope>>(x)
+                    x => Deserialize<WorkflowExecutionScope>(x)
                 );
             
             entity
@@ -176,6 +178,6 @@ namespace Elsa.Persistence.EntityFrameworkCore.DbContexts
         private T Deserialize<T>(string json)
         {
             return JsonConvert.DeserializeObject<T>(json, serializerSettings);
-        }
+        } 
     }
 }

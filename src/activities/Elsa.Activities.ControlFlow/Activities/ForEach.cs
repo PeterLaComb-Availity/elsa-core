@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using Elsa.Attributes;
@@ -11,7 +11,7 @@ using Elsa.Services.Models;
 
 namespace Elsa.Activities.ControlFlow.Activities
 {
-    [ActivityDefinition(Category = "Control Flow", Description = "Iterate over a collection.", Icon = "far fa-circle")]
+    [ActivityDefinition(Category = "Control Flow", Description = "Iterate over a collection.", Icon = "far fa-circle", Outcomes = "[ 'Done', 'Iterate' ]")]
     public class ForEach : Activity
     {
         private readonly IWorkflowExpressionEvaluator expressionEvaluator;
@@ -22,9 +22,9 @@ namespace Elsa.Activities.ControlFlow.Activities
         }
 
         [ActivityProperty(Hint = "Enter an expression that evaluates to an array of items to iterate over.")]
-        public WorkflowExpression<IList<object>> CollectionExpression
+        public WorkflowExpression<IList> CollectionExpression
         {
-            get => GetState(() => new JavaScriptExpression<IList<object>>("[]"));
+            get => GetState(() => new JavaScriptExpression<IList>("[]"));
             set => SetState(value);
         }
 
@@ -48,20 +48,19 @@ namespace Elsa.Activities.ControlFlow.Activities
             var collection = await expressionEvaluator.EvaluateAsync(CollectionExpression, context, cancellationToken);
             var index = CurrentIndex;
 
+            if (collection.Count == 0)
+            {
+                return Done();
+            }
+
             if (index >= collection.Count)
             {
-                context.EndScope();
                 CurrentIndex = 0;
                 return Done();
             }
 
             var value = collection[index];
             CurrentIndex++;
-
-            if (index == 0)
-            {
-                context.BeginScope();
-            }
 
             context.CurrentScope.SetVariable(IteratorName, value);
 
